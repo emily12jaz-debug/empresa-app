@@ -1,0 +1,153 @@
+/* ==========================================
+   1. ENCABEZADO Y NAVEGACIÓN
+   ========================================== */
+
+/* Altura fija y color café superior */
+.header-top {
+  background-color: #ba7a44;
+  height: 75px;
+}
+
+/* Recuadro contenedor del logo */
+.logo-box {
+  width: 90px;
+  height: 45px;
+}
+
+.header-logo {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* Contenedor del buscador con la lupa */
+.search-container {
+  height: 36px;
+  border-radius: 4px;
+}
+
+.search-input {
+  outline: none;
+  font-size: 0.9rem;
+  padding: 4px;
+}
+
+.icon-lupa {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+/* Íconos SVG generales del menú e inicio de sesión */
+.icon-svg {
+  width: 22px;
+  height: 22px;
+}
+
+.filter-white {
+  filter: brightness(0) invert(1);
+}
+
+/* ==========================================
+   2. BANNER PRINCIPAL (HERO)
+   ========================================== */
+
+/* Contenedor del banner */
+.hero-banner {
+  height: 180px; /* Altura fija para banners horizontales */
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Imagen del banner */
+.hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Hace que llene el recuadro sin deformar la figura */
+  display: block;
+}
+
+/* ==========================================
+   3. TARJETAS DE PRODUCTOS 
+   ========================================== */
+
+/* Altura exacta para alojar imágenes de 250x250 px */
+.product-img-box {
+  height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 8px;
+}
+
+/* La imagen mantiene su tamaño de 250x250 o se adapta de forma contenida */
+.product-img {
+  width: 250px;
+  height: 250px;
+  object-fit: contain;
+}
+
+/* Botón Comprar azul marino */
+.btn-custom-buy {
+  background-color: #0b2b60;
+  border-color: #081f44;
+  padding: 8px 0;
+}
+
+.btn-custom-buy:hover {
+  background-color: #081f44;
+}
+/* ==========================================
+   4. PIE DE PÁGINA (FOOTER)
+   ========================================== */
+
+.footer-custom {
+  background-color: #9e9e9e;
+
+ /* ==========================================
+   5. MENÚ DESPLEGABLE (SOBRE NOSOTROS)
+   ========================================== */
+
+/* Cursor de mano para el icono interactivo */
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* Altura fija de la barra negra para que no cambie de tamaño al abrir el menú */
+.header-bottom {
+  height: 48px;
+}
+
+/* Caja del menú flotante: cae hacia abajo sin mover la página */
+.dropdown-menu-custom {
+  position: absolute;
+  top: 100%;       /* Se ubica inmediatamente debajo de la barra negra */
+  left: 0;         /* Alineado al borde izquierdo de la sección */
+  background-color: #000000;
+  border: 1px solid #ffffff;
+  border-radius: 0;
+  box-shadow: none;
+  z-index: 1050;   /* Se superpone sobre el banner */
+  min-width: 220px;
+}
+
+/* Cada opción de la lista con su división blanca */
+.dropdown-item-custom {
+  color: #ffffff;
+  padding: 8px 14px;
+  font-size: 0.9rem;
+  border-bottom: 1px solid #ffffff;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.2s ease;
+}
+
+/* Cambio a gris al pasar el cursor */
+.dropdown-item-custom:hover {
+  background-color: #333333;
+}
+}
