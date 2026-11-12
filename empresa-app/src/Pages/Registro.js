@@ -111,7 +111,7 @@ export default function Registro() {
           {/* Columna izquierda */}
           <div className="col-12 col-md-6">
             <Campo etiqueta="Nombre(s)" name="nombres" valor={datos.nombres} onChange={manejarCambio} />
-            <Campo etiqueta="Apellido materno" name="apellidomaterno" valor={datos.apellidomaterno} onChange={manejarCambio} />
+            <Campo etiqueta="Apellido materno" name="apellidoMaterno" valor={datos.apellidoMaterno} onChange={manejarCambio} />
             <Campo
               etiqueta="Fecha de nacimiento (dd-mm-aaaa)"
               name="fechaNacimiento"
@@ -124,7 +124,7 @@ export default function Registro() {
 
           {/* Columna derecha */}
           <div className="col-12 col-md-6">
-            <Campo etiqueta="Apellido paterno" name="apellidopaterno" valor={datos.apellidopaterno} onChange={manejarCambio} />
+            <Campo etiqueta="Apellido paterno" name="apellidoPaterno" valor={datos.apellidoPaterno} onChange={manejarCambio} />
             <Campo etiqueta="Correo electrónico" name="correo" type="email" valor={datos.correo} onChange={manejarCambio} />
             <Campo etiqueta="Número telefónico (10 dígitos)" name="telefono" type="tel" valor={datos.telefono} onChange={manejarCambio} />
             <Campo etiqueta="Confirmar contraseña" name="confirmar" type="password" valor={datos.confirmar} onChange={manejarCambio} />
