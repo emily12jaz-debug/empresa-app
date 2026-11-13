@@ -79,6 +79,19 @@ CREATE TABLE IF NOT EXISTS pedido_detalle (
   cantidad         INTEGER NOT NULL CHECK (cantidad > 0)
 );
 
+-- ===== Comentarios de cada producto =====
+-- Solo los clientes comentan. No se liga a la tabla clientes: no se muestra su cuenta,
+-- únicamente el nombre que escribe en el formulario (por eso "nombre" es un texto libre).
+CREATE TABLE IF NOT EXISTS comentarios (
+  id_comentario  INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  id_producto    INTEGER NOT NULL REFERENCES productos(id_producto) ON DELETE CASCADE,
+  nombre         VARCHAR(100) NOT NULL DEFAULT 'Usuario anónimo',
+  calificacion   SMALLINT NOT NULL CHECK (calificacion BETWEEN 1 AND 5),
+  comentario     TEXT NOT NULL,
+  fecha          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS comentarios_producto_idx ON comentarios (id_producto);
+
 -- Productos iniciales (solo si la tabla está vacía)
 INSERT INTO productos (titulo, modelo, precio, descripcion, imagen)
 SELECT * FROM (VALUES

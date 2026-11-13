@@ -23,6 +23,7 @@ app.get('/api/salud', async (req, res) => {
 
 app.use('/api', require('./routes/auth'));
 app.use('/api', require('./routes/productos'));
+app.use('/api', require('./routes/comentarios'));
 app.use('/api', require('./routes/carrito'));
 app.use('/api', require('./routes/pedidos'));
 app.use('/api', require('./routes/perfil'));

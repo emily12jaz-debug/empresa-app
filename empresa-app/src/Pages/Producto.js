@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { api, obtenerSesion, IMAGENES, formatoPrecio } from '../api';
 
@@ -35,43 +35,56 @@ export default function Producto() {
     }
   };
 
-  // Estado inicial con comentarios predeterminados
-  const [comentarios, setComentarios] = useState([
-    {
-      id: 1,
-      autor: 'Instituto Pedagógico CDMX',
-      estrellas: 5,
-      texto: 'Adquirimos 50 unidades para las aulas de secundaria. Excelente calidad y los alumnos comentan que son muy cómodas.'
-    },
-  ]);
+  // Comentarios guardados en la base de datos (se cargan según el producto)
+  const [comentarios, setComentarios] = useState([]);
+  const [cargandoComentarios, setCargandoComentarios] = useState(true);
+  const [avisoComentario, setAvisoComentario] = useState({ tipo: '', texto: '' });
+  const [publicando, setPublicando] = useState(false);
+
+  useEffect(() => {
+    if (!producto) return undefined;
+    let activo = true;
+    api(`/productos/${producto.id_producto}/comentarios`)
+      .then((datos) => activo && setComentarios(datos))
+      .catch((error) => activo && setAvisoComentario({ tipo: 'danger', texto: error.message }))
+      .finally(() => activo && setCargandoComentarios(false));
+    return () => {
+      activo = false;
+    };
+  }, [producto]);
 
   // Estados locales para el formulario de nuevo comentario
   const [nuevoNombre, setNuevoNombre] = useState('');
   const [nuevaCalificacion, setNuevaCalificacion] = useState(5);
   const [nuevoTexto, setNuevoTexto] = useState('');
 
-  // Agregar comentario al listado
-  const manejarEnvioComentario = (e) => {
+  // Guarda el comentario en la base de datos y lo agrega al listado
+  const manejarEnvioComentario = async (e) => {
     e.preventDefault();
 
     if (!nuevoTexto.trim()) {
-      alert('Por favor escribe un comentario antes de enviar.');
+      setAvisoComentario({ tipo: 'danger', texto: 'Escribe un comentario antes de publicar.' });
       return;
     }
 
-    const nuevoComentarioObj = {
-      id: Date.now(),
-      autor: nuevoNombre.trim() === '' ? 'Usuario Anónimo' : nuevoNombre,
-      estrellas: Number(nuevaCalificacion),
-      texto: nuevoTexto
-    };
+    setPublicando(true);
+    try {
+      const creado = await api(`/productos/${producto.id_producto}/comentarios`, {
+        method: 'POST',
+        body: { nombre: nuevoNombre, calificacion: Number(nuevaCalificacion), comentario: nuevoTexto },
+      });
+      setComentarios((anteriores) => [creado, ...anteriores]);
 
-    setComentarios([nuevoComentarioObj, ...comentarios]);
-
-    // Limpiar formulario
-    setNuevoNombre('');
-    setNuevoTexto('');
-    setNuevaCalificacion(5);
+      // Limpiar formulario
+      setNuevoNombre('');
+      setNuevoTexto('');
+      setNuevaCalificacion(5);
+      setAvisoComentario({ tipo: 'success', texto: 'Tu comentario fue publicado' });
+    } catch (error) {
+      setAvisoComentario({ tipo: 'danger', texto: error.message });
+    } finally {
+      setPublicando(false);
+    }
   };
 
   // Función auxiliar para dibujar las estrellas Unicode
@@ -112,13 +125,6 @@ export default function Producto() {
             <p className="text-secondary m-0 mt-1" style={{ fontSize: '0.95rem' }}>
               Modelo: {producto.modelo}
             </p>
-
-            <div className="d-flex align-items-center gap-1 mt-2">
-              <span style={{ color: '#ffc107', fontSize: '1.2rem', lineHeight: '1' }}>
-                ★★★★☆
-              </span>
-              <span className="text-muted small fw-medium">(4.5)</span>
-            </div>
 
             <div className="mt-3">
               <span className="fw-bold fs-3" style={{ color: '#d9534f' }}>
@@ -225,13 +231,20 @@ export default function Producto() {
               ></textarea>
             </div>
 
+            {avisoComentario.texto && (
+              <div className="col-12">
+                <p className={`m-0 fw-medium text-${avisoComentario.tipo}`}>{avisoComentario.texto}</p>
+              </div>
+            )}
+
             <div className="col-12 text-end">
               <button
                 type="submit"
+                disabled={publicando}
                 className="btn text-white fw-medium px-4 py-2"
                 style={{ backgroundColor: '#071f4c', borderRadius: '0px', fontSize: '0.9rem' }}
               >
-                Publicar comentario
+                {publicando ? 'Publicando...' : 'Publicar comentario'}
               </button>
             </div>
           </div>
@@ -239,18 +252,22 @@ export default function Producto() {
     
       {/* Listado dinámico de comentarios */}
         <div className="d-flex flex-column gap-3">
+          {cargandoComentarios && <p className="text-secondary m-0">Cargando comentarios…</p>}
+          {!cargandoComentarios && comentarios.length === 0 && (
+            <p className="text-secondary m-0">Aún no hay comentarios. Sé el primero en opinar.</p>
+          )}
           {comentarios.map((c) => (
-            <div key={c.id} className="border-bottom pb-2">
+            <div key={c.id_comentario} className="border-bottom pb-2">
               <div className="d-flex justify-content-between align-items-center mb-1">
                 <span className="fw-semibold text-dark" style={{ fontSize: '0.92rem' }}>
-                  {c.autor}
+                  {c.nombre}
                 </span>
                 <span style={{ color: '#ffc107', fontSize: '0.95rem' }}>
-                  {renderEstrellas(c.estrellas)}
+                  {renderEstrellas(c.calificacion)}
                 </span>
               </div>
               <p className="m-0 text-secondary" style={{ fontSize: '0.88rem' }}>
-                {c.texto}
+                {c.comentario}
               </p>
             </div>
           ))}
