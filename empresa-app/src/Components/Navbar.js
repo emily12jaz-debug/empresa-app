@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import logo from '../Assets/Images/logo.jpg';
 import logotipo from '../Assets/Images/logotipo.jpg';
 import menuIcon from '../Assets/Icons/menu.svg';
 import usuarioIcon from '../Assets/Icons/usuario.svg';
 import lupaIcon from '../Assets/Icons/lupa.svg';
+import { api, obtenerSesion, IMAGENES, formatoPrecio } from '../api';
+import { filtrarProductos } from '../busqueda';
 
 export default function Navbar() {
   const [menuAbierto, setMenuAbierto] = useState(false);
@@ -14,6 +16,60 @@ export default function Navbar() {
 
   // Comprobación de sesión activa
   const haySesion = !!localStorage.getItem('sesion');
+
+  // ---- Buscador (solo para clientes) ----
+  const esCliente = obtenerSesion()?.rol === 'Cliente';
+  const [textoBusqueda, setTextoBusqueda] = useState('');
+  const [catalogo, setCatalogo] = useState([]);
+  const [sugerenciasAbiertas, setSugerenciasAbiertas] = useState(false);
+  const cajaBusqueda = useRef(null);
+
+  const cargarCatalogo = () => {
+    api('/productos')
+      .then((datos) => setCatalogo(datos))
+      .catch(() => {});
+  };
+
+  // Carga el catálogo cuando hay un cliente con sesión
+  useEffect(() => {
+    if (esCliente) cargarCatalogo();
+  }, [esCliente]);
+
+  // Cierra las sugerencias al hacer clic fuera del buscador
+  useEffect(() => {
+    const cerrar = (e) => {
+      if (cajaBusqueda.current && !cajaBusqueda.current.contains(e.target)) {
+        setSugerenciasAbiertas(false);
+      }
+    };
+    document.addEventListener('mousedown', cerrar);
+    return () => document.removeEventListener('mousedown', cerrar);
+  }, []);
+
+  // En la página de resultados, el cuadro muestra lo que se buscó
+  useEffect(() => {
+    if (location.pathname === '/buscar') {
+      setTextoBusqueda(new URLSearchParams(location.search).get('q') || '');
+    }
+  }, [location.pathname, location.search]);
+
+  const sugerencias = filtrarProductos(catalogo, textoBusqueda).slice(0, 6);
+  const hayConsulta = textoBusqueda.trim().length > 0;
+
+  const buscar = (e) => {
+    e.preventDefault();
+    const consulta = textoBusqueda.trim();
+    if (!consulta) return;
+    setSugerenciasAbiertas(false);
+    navigate(`/buscar?q=${encodeURIComponent(consulta)}`);
+  };
+
+  const verProducto = (producto) => {
+    localStorage.setItem('productoSeleccionado', JSON.stringify(producto));
+    setSugerenciasAbiertas(false);
+    setTextoBusqueda('');
+    navigate('/producto');
+  };
 
   const toggleMenu = () => {
     setMenuAbierto(!menuAbierto);
@@ -70,16 +126,99 @@ export default function Navbar() {
           }} 
         />
 
-        {/* Buscador condicional: solo visible si hay sesión iniciada */}
-        {haySesion ? (
-          <div className="d-flex align-items-center bg-white border border-dark px-2" style={{ height: '36px', borderRadius: '4px' }}>
-            <input 
-              type="text" 
-              placeholder="Buscar articulos" 
-              className="border-0 bg-transparent"
-              style={{ outline: 'none', fontSize: '0.9rem', padding: '4px' }}
-            />
-            <img src={lupaIcon} alt="Buscar" style={{ width: '18px', height: '18px', cursor: 'pointer' }} />
+        {/* Buscador: solo visible para clientes con sesión iniciada */}
+        {esCliente ? (
+          <div ref={cajaBusqueda} style={{ position: 'relative' }}>
+            <form
+              onSubmit={buscar}
+              className="d-flex align-items-center bg-white border border-dark px-2"
+              style={{ height: '36px', borderRadius: '4px' }}
+            >
+              <input
+                type="text"
+                value={textoBusqueda}
+                onChange={(e) => {
+                  setTextoBusqueda(e.target.value);
+                  setSugerenciasAbiertas(true);
+                }}
+                onFocus={() => {
+                  setSugerenciasAbiertas(true);
+                  cargarCatalogo();
+                }}
+                placeholder="Buscar artículos"
+                aria-label="Buscar artículos"
+                autoComplete="off"
+                className="border-0 bg-transparent"
+                style={{ outline: 'none', fontSize: '0.9rem', padding: '4px', width: '210px' }}
+              />
+              <button
+                type="submit"
+                aria-label="Buscar"
+                className="btn p-0 border-0 d-flex align-items-center"
+                style={{ background: 'none' }}
+              >
+                <img src={lupaIcon} alt="" style={{ width: '18px', height: '18px' }} />
+              </button>
+            </form>
+
+            {sugerenciasAbiertas && hayConsulta && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 4px)',
+                  right: 0,
+                  width: '380px',
+                  maxWidth: '90vw',
+                  backgroundColor: '#ffffff',
+                  border: '1.5px solid #071f4c',
+                  boxShadow: '0 6px 18px rgba(0, 0, 0, 0.25)',
+                  zIndex: 1060,
+                }}
+              >
+                {sugerencias.length > 0 ? (
+                  <>
+                    {sugerencias.map((p) => (
+                      <div
+                        key={p.id_producto}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => verProducto(p)}
+                        onKeyDown={(e) => e.key === 'Enter' && verProducto(p)}
+                        className="d-flex align-items-center gap-3 px-3 py-2 border-bottom"
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <img
+                          src={IMAGENES[p.imagen] || IMAGENES.silla1}
+                          alt=""
+                          style={{ width: '52px', height: '52px', objectFit: 'contain' }}
+                        />
+                        <div className="flex-grow-1 text-start">
+                          <div className="fw-bold text-dark" style={{ fontSize: '0.92rem' }}>{p.titulo}</div>
+                          <div className="text-secondary" style={{ fontSize: '0.8rem' }}>Modelo: {p.modelo}</div>
+                        </div>
+                        <div className="fw-bold text-danger" style={{ fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
+                          {formatoPrecio(p.precio)}
+                        </div>
+                      </div>
+                    ))}
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={buscar}
+                      onKeyDown={(e) => e.key === 'Enter' && buscar(e)}
+                      className="px-3 py-2 text-center fw-medium"
+                      style={{ cursor: 'pointer', color: '#071f4c', fontSize: '0.9rem' }}
+                    >
+                      Ver todos los resultados para “{textoBusqueda.trim()}”
+                    </div>
+                  </>
+                ) : (
+                  <div className="px-3 py-3 text-center text-secondary" style={{ fontSize: '0.9rem' }}>
+                    No encontramos productos para “{textoBusqueda.trim()}”.
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           <div style={{ width: '90px' }}></div>
