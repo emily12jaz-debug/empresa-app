@@ -20,7 +20,7 @@ const formatoFecha = (fecha) =>
     minute: '2-digit',
   });
 
-function correoConfirmacion({ idPedido, nombre, items, total, fecha, urlCuenta }) {
+function correoConfirmacion({ idPedido, nombre, items, total, subtotal, descuento, fecha, urlCuenta }) {
   const unidades = items.reduce((suma, i) => suma + i.cantidad, 0);
 
   const filas = items
@@ -108,6 +108,15 @@ function correoConfirmacion({ idPedido, nombre, items, total, fecha, urlCuenta }
                   <td align="right" style="padding:10px 12px;font-family:${FUENTE};font-size:12px;letter-spacing:1px;color:#ffffff;">SUBTOTAL</td>
                 </tr>
                 ${filas}
+                ${descuento > 0 ? `
+                <tr>
+                  <td colspan="2" align="right" style="padding:10px 8px 0 12px;font-family:${FUENTE};font-size:14px;color:#555555;">Subtotal</td>
+                  <td align="right" style="padding:10px 12px 0 8px;font-family:${FUENTE};font-size:14px;color:#555555;white-space:nowrap;">${dinero(subtotal)}</td>
+                </tr>
+                <tr>
+                  <td colspan="2" align="right" style="padding:6px 8px 0 12px;font-family:${FUENTE};font-size:14px;color:#2e7d32;">Descuento por mayoreo (10%)</td>
+                  <td align="right" style="padding:6px 12px 0 8px;font-family:${FUENTE};font-size:14px;color:#2e7d32;white-space:nowrap;">-${dinero(descuento)}</td>
+                </tr>` : ''}
                 <tr>
                   <td colspan="2" align="right" style="padding:18px 8px 6px 12px;font-family:${FUENTE};font-size:15px;color:#555555;">Total del pedido</td>
                   <td align="right" style="padding:18px 12px 6px 8px;font-family:${FUENTE};font-size:22px;font-weight:bold;color:${AZUL};white-space:nowrap;">${dinero(total)}</td>

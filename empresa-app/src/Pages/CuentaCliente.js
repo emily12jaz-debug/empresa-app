@@ -50,7 +50,10 @@ export default function CuentaCliente() {
 
   const misPedidosEnProceso = pedidos.filter((p) => p.estado !== 'Finalizado' && p.estado !== 'Cancelado');
   const historial = pedidos.filter((p) => p.estado === 'Finalizado' || p.estado === 'Cancelado');
-  const totalCarrito = carrito.reduce((suma, i) => suma + Number(i.precio) * i.cantidad, 0);
+  const unidadesCarrito = carrito.reduce((suma, i) => suma + i.cantidad, 0);
+  const subtotalCarrito = carrito.reduce((suma, i) => suma + Number(i.precio) * i.cantidad, 0);
+  const descuentoCarrito = unidadesCarrito >= 100 ? Math.round(subtotalCarrito * 0.10 * 100) / 100 : 0;
+  const totalCarrito = subtotalCarrito - descuentoCarrito;
 
   const verDetalleProducto = (producto) => {
     localStorage.setItem('productoSeleccionado', JSON.stringify(producto));
@@ -223,7 +226,15 @@ export default function CuentaCliente() {
                 ))}
               </div>
               <div className="d-flex justify-content-end align-items-center gap-4 mt-4 pt-3 border-top flex-wrap">
-                <span className="fw-bold fs-5 text-dark">Total: {formatoPrecio(totalCarrito)}</span>
+                <div className="text-end">
+  {descuentoCarrito > 0 && (
+    <>
+      <div className="text-secondary">Subtotal: {formatoPrecio(subtotalCarrito)}</div>
+      <div className="text-success">Descuento por mayoreo (10%): -{formatoPrecio(descuentoCarrito)}</div>
+    </>
+  )}
+  <span className="fw-bold fs-5 text-dark">Total: {formatoPrecio(totalCarrito)}</span>
+</div>
                 <button
                   type="button"
                   onClick={finalizarCompra}

@@ -38,12 +38,15 @@ router.post('/pedidos/checkout', verificarToken, soloRol('Cliente'), async (req,
       return res.status(400).json({ mensaje: 'Tu carrito está vacío' });
     }
 
-    const total = items.reduce((suma, i) => suma + Number(i.precio) * i.cantidad, 0);
+    const unidades = items.reduce((suma, i) => suma + i.cantidad, 0);
+    const subtotal = items.reduce((suma, i) => suma + Number(i.precio) * i.cantidad, 0);
+    const descuento = unidades >= 100 ? Math.round(subtotal * 0.10 * 100) / 100 : 0;
+    const total = subtotal - descuento;
     const nuevo = await client.query(
       'INSERT INTO pedidos (id_usuario, total) VALUES ($1, $2) RETURNING id_pedido, fecha',
       [req.usuario.id, total]
     );
-    pedido = { ...nuevo.rows[0], total };
+    pedido = { ...nuevo.rows[0], total, subtotal, descuento };
 
     for (const i of items) {
       await client.query(
@@ -80,6 +83,8 @@ router.post('/pedidos/checkout', verificarToken, soloRol('Cliente'), async (req,
         nombre: usuario.nombres,
         items,
         total: pedido.total,
+        subtotal: pedido.subtotal,
+        descuento: pedido.descuento,
         fecha: pedido.fecha,
         urlCuenta,
       }),
